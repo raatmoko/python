@@ -6,6 +6,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Daftar repository yang dimonitor
+#tambah baris
 repositories = []
 
 @app.route('/')
