@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Commit Monitor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button, select {
+            margin: 5px;
+            padding: 10px;
+        }
+        .commit-details {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>GitHub Commit Monitor</h1>
+
+    <div>
+        <h2>Get Commits</h2>
+        <label for="owner">Owner:</label>
+        <input type="text" id="owner" placeholder="Owner">
+        <label for="repo">Repository:</label>
+        <input type="text" id="repo" placeholder="Repository">
+        <button onclick="getCommits()">Get Commits</button>
+    </div>
+
+    <div>
+        <h2>Commits</h2>
+        <select id="commit-list" size="5" style="width: 100%;"></select>
+        <button onclick="getCommitDetails()">Get Commit Details</button>
+    </div>
+
+    <div>
+        <h2>Count All Changes</h2>
+        <button onclick="countAllChanges()">Count All Changes</button>
+        <div id="total-changes"></div>
+    </div>
+    
+    <script>
+        async function countAllChanges() {
+            const owner = document.getElementById('owner').value;
+            const repo = document.getElementById('repo').value;
+    
+            if (!owner || !repo) {
+                alert("Please fill in the owner and repository fields.");
+                return;
+            }
+    
+            try {
+                const response = await fetch(`${API_BASE}/all-commit-changes?owner=${owner}&repo=${repo}`);
+                const data = await response.json();
+    
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    displayTotalChanges(data);
+                }
+    
+                console.log("Raw Total Changes Data:", data); // Tampilkan raw data di console
+            } catch (error) {
+                console.error("Error fetching total changes:", error);
+            }
+        }
+    
+        function displayTotalChanges(data) {
+            const totalChangesDiv = document.getElementById('total-changes');
+            totalChangesDiv.innerHTML = `
+                <div>
+                    <h3>Total Changes:</h3>
+                    <p>Additions: ${data.total_additions}</p>
+                    <p>Deletions: ${data.total_deletions}</p>
+                    <p>Total Changes: ${data.total_changes}</p>
+                </div>
+            `;
+        }
+    </script>
+    
+
+
+
+
+
+    <h2>Commit Details</h2>
+    <div id="commit-results"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000';
+
+        async function getCommits() {
+            const owner = document.getElementById('owner').value;
+            const repo = document.getElementById('repo').value;
+
+            if (!owner || !repo) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/commits?owner=${owner}&repo=${repo}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    displayCommits(data);
+                }
+
+                console.log("Raw Commit Data:", data); // Tampilkan raw data di console
+            } catch (error) {
+                console.error("Error fetching commits:", error);
+            }
+        }
+
+        function displayCommits(commits) {
+            const commitList = document.getElementById('commit-list');
+            commitList.innerHTML = '';
+            commits.forEach(commit => {
+                const option = document.createElement('option');
+                option.value = commit.sha;
+                option.textContent = `${commit.sha.slice(0, 7)} - ${commit.message}`;
+                commitList.appendChild(option);
+            });
+        }
+
+        async function getCommitDetails() {
+            const owner = document.getElementById('owner').value;
+            const repo = document.getElementById('repo').value;
+            const sha = document.getElementById('commit-list').value;
+
+            if (!owner || !repo || !sha) {
+                alert("Please select a commit.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/commit-details?owner=${owner}&repo=${repo}&sha=${sha}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    displayCommitDetails(data);
+                }
+
+                console.log("Raw Commit Details:", data); // Tampilkan raw data di console
+            } catch (error) {
+                console.error("Error fetching commit details:", error);
+            }
+        }
+
+        function displayCommitDetails(data) {
+            const resultsDiv = document.getElementById('commit-results');
+            resultsDiv.innerHTML = `
+                <div class="commit-details">
+                    <h3>SHA: ${data.sha}</h3>
+                    <p>Message: ${data.message}</p>
+                    <p>Author: ${data.author}</p>
+                    <p>Date: ${data.date}</p>
+                    <h4>Stats:</h4>
+                    <p>Total Changes: ${data.stats.total || 0}</p>
+                    <p>Additions: ${data.stats.additions || 0}</p>
+                    <p>Deletions: ${data.stats.deletions || 0}</p>
+                    <h4>Files Changed:</h4>
+                    <ul>
+                        ${data.files.map(file => `
+                            <li>
+                                <p>Filename: ${file.filename}</p>
+                                <p>Status: ${file.status}</p>
+                                <p>Changes: ${file.changes}</p>
+                                <p>Additions: ${file.additions}</p>
+                                <p>Deletions: ${file.deletions}</p>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
