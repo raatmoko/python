@@ -6,7 +6,7 @@ app = Flask(__name__)
 CORS(app)
 
 # Daftar repository yang dimonitor
-#tambah baris
+
 repositories = []
 
 @app.route('/')
@@ -146,3 +146,8 @@ def all_commit_changes():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
+
+
+
+
+#check the app.py file
